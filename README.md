@@ -58,7 +58,7 @@ Heart Disease Prediction
 
 ---
 
-## 📊 Dataset
+## Dataset
 
 The dataset contains patient health and clinical attributes that can be used to predict the presence or likelihood of heart disease.
 
@@ -171,7 +171,7 @@ For a medical prediction problem, **recall is particularly important** because f
 * **Matplotlib**
 * **Seaborn**
 * **Scikit-learn**
-* **Jupyter Notebook**
+* **Vs Code**
 
 ---
 
@@ -241,19 +241,19 @@ pip install -r requirements.txt
 
 ## Running the Project
 
-If the project uses a Jupyter Notebook:
+If the project uses a Vs Code:
 
 ```bash
-jupyter notebook
+Vs Code
 ```
 
 Open the notebook:
 
 ```text
-notebooks/heart_disease_prediction.ipynb
+notebooks/heart_disease_prediction.py
 ```
 
-Run the cells sequentially to:
+Run the code:
 
 1. Load the dataset
 2. Explore the data
@@ -341,7 +341,7 @@ This project is intended for educational purposes. Add an appropriate open-sourc
 
 ---
 
-## 👤 Author
+## Author
 
 **Abad Adil** and **Sharjeel Waqar**
 
