@@ -346,7 +346,7 @@ This project is intended for educational purposes. Add an appropriate open-sourc
 **Abad Adil** and **Sharjeel Waqar**
 
 GitHub: `https://github.com/abad05adil12`
-
+GitHub: `https://github.com/Sharjeeldev12`
 ---
 
 If you find this project useful, consider giving the repository a star.
