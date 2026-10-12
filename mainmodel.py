@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
+
 # df=pd.read_csv("dataset/cardio_train_uncleaned.csv")
 BASE_DIR = Path(__file__).resolve().parent
 DATA_PATH = BASE_DIR / "dataset" / "cardio_labels_fixed.csv"
@@ -121,3 +122,7 @@ df[['age','height','weight','ap_hi','ap_lo']]=scaler.fit_transform(
 )
 
 print(df[['age','height','weight','ap_hi','ap_lo']].head())
+
+OUT_PATH = BASE_DIR / "dataset" / "cardio_clean.csv"
+df.to_csv(OUT_PATH, index=False)
+print("Saved cleaned data:", df.shape)
