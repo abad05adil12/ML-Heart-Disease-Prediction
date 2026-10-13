@@ -24,11 +24,11 @@ print(df.duplicated().sum())
 
 # Analysis of Numerical columns
 
-# df["age"].hist()
-# plt.xlabel("Age")
-# plt.ylabel("Frequency")
-# plt.title("Distribution of Age")
-# plt.show()
+df["age"].hist()
+plt.xlabel("Age")
+plt.ylabel("Frequency")
+plt.title("Distribution of Age")
+plt.show()
 
 # Outliers
 
