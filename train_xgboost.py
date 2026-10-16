@@ -75,7 +75,8 @@ print("Recall:  {:.2f}%".format(
 ))
 
 print("F1 Score:  {:.2f}%".format(
-    f1_score(y_test, y_pred, zero_division=0) * 100
+    f1_score(y_test, y_pred, zero_division=0) 
+    * 100
 ))
 
 confusion = confusion_matrix(y_test, y_pred)
