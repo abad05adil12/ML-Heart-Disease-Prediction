@@ -67,7 +67,8 @@ print("Accuracy:  {:.2f}%".format(
 ))
 
 print("Precision:   {:.2f}%".format(
-    precision_score(y_test, y_pred, zero_division=0) * 100
+    precision_score(y_test, y_pred, zero_division=0) *
+    100
 ))
 
 print("Recall:  {:.2f}%".format(
