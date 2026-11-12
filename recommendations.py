@@ -32,7 +32,6 @@ def generate_suggestions(patient, prediction):
             "Your cholesterol category is high. "
             "Discuss cholesterol testing and management with a doctor."
         )
-
     glucose = patient.get("gluc")
 
     if glucose == 3:
