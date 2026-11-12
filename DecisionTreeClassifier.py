@@ -76,7 +76,7 @@ confusion = confusion_matrix(
     y_pred,
     labels=[0, 1]
 )
-
+#Confusion Matrix
 tn, fp, fn, tp = confusion.ravel()
 
 print("Accuracy: {:.2f}%".format(
