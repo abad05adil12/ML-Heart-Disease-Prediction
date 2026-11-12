@@ -102,7 +102,7 @@ print("ROC-AUC: {:.4f}".format(
 print("PR-AUC: {:.4f}".format(
     average_precision_score(y_test, y_prob)
 ))
-
+#Confusion Matrix
 ConfusionMatrixDisplay(
     confusion_matrix=confusion,
     display_labels=["No Disease", "Disease"]
