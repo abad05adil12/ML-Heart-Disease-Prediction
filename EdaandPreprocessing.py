@@ -583,7 +583,7 @@ for col in numeric_cols:
                 f"{col}: filled {missing_before} missing values "
                 f"using median {median_value:.2f}"
             )
-
+#Categorical columns imputation
 for col in categorical_cols:
     missing_before = int(df[col].isna().sum())
 
