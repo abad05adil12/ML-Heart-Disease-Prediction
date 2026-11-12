@@ -11,10 +11,16 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
     confusion_matrix,
-    ConfusionMatrixDisplay
+    ConfusionMatrixDisplay,
+    roc_auc_score,
+    average_precision_score,
+    RocCurveDisplay,
+    PrecisionRecallDisplay
 )
+from recommendations import generate_suggestions
 
 BASE_DIR = Path(__file__).resolve().parent
+
 df = pd.read_csv(BASE_DIR / "dataset" / "trained_data.csv")
 df = df.dropna(subset=["cardio"])
 
@@ -29,7 +35,7 @@ x = df.drop(
     errors="ignore"
 )
 
-y = df["cardio"]
+y = df["cardio"].astype(int)
 
 x = pd.get_dummies(x, drop_first=True, dtype=int)
 
@@ -61,36 +67,114 @@ model = DecisionTreeClassifier(
 )
 
 model.fit(x_train, y_train)
-y_pred = model.predict(x_test)
 
-print("Accuracy:  {:.2f}%".format(
+y_pred = model.predict(x_test)
+y_prob = model.predict_proba(x_test)[:, 1]
+
+confusion = confusion_matrix(
+    y_test,
+    y_pred,
+    labels=[0, 1]
+)
+
+tn, fp, fn, tp = confusion.ravel()
+
+print("Accuracy: {:.2f}%".format(
     accuracy_score(y_test, y_pred) * 100
 ))
 
-print("Precision:   {:.2f}%".format(
+print("Precision: {:.2f}%".format(
     precision_score(y_test, y_pred, zero_division=0) * 100
 ))
 
-print("Recall:  {:.2f}%".format(
+print("Recall: {:.2f}%".format(
     recall_score(y_test, y_pred, zero_division=0) * 100
 ))
 
-print("F1 Score:  {:.2f}%".format(
+print("Specificity: {:.2f}%".format(
+    tn / (tn + fp) * 100 if (tn + fp) > 0 else 0
+))
+
+print("F1 Score: {:.2f}%".format(
     f1_score(y_test, y_pred, zero_division=0) * 100
 ))
 
-# 11. Display confusion matrix
-confusion = confusion_matrix(y_test, y_pred)
+print("ROC-AUC: {:.4f}".format(
+    roc_auc_score(y_test, y_prob)
+))
 
-display = ConfusionMatrixDisplay(
+print("PR-AUC: {:.4f}".format(
+    average_precision_score(y_test, y_prob)
+))
+
+ConfusionMatrixDisplay(
     confusion_matrix=confusion,
     display_labels=["No Disease", "Disease"]
-)
+).plot()
 
-display.plot()
 plt.title("Decision Tree Confusion Matrix")
+plt.tight_layout()
 plt.show()
 
-joblib.dump(model, BASE_DIR / "decision_tree_model.pkl")
-joblib.dump(imputer, BASE_DIR / "decision_tree_imputer.pkl")
-joblib.dump(list(x.columns), BASE_DIR / "decision_tree_columns.pkl")
+RocCurveDisplay.from_predictions(
+    y_test,
+    y_prob,
+    name="Decision Tree"
+)
+
+plt.title("Decision Tree ROC Curve")
+plt.tight_layout()
+plt.show()
+
+PrecisionRecallDisplay.from_predictions(
+    y_test,
+    y_prob,
+    name="Decision Tree"
+)
+
+plt.title("Decision Tree Precision-Recall Curve")
+plt.tight_layout()
+plt.show()
+
+patient_data = x_test.iloc[[0]]
+
+prediction = model.predict(patient_data)[0]
+
+# Replace these example values with original, unscaled
+# measurements belonging to the same patient.
+patient = {
+    "ap_hi": 160,
+    "cholesterol": 3,
+    "gluc": 2,
+    "bmi": 31
+}
+
+result, suggestions = generate_suggestions(
+    patient,
+    prediction
+)
+
+print("Prediction:", result)
+
+print("\nPersonalized Suggestions:")
+
+for suggestion in suggestions:
+    print("-", suggestion)
+
+print("\nNote: This prediction is not a medical diagnosis.")
+
+# Save Model
+joblib.dump(
+    model,
+    BASE_DIR / "decision_tree_model.pkl"
+)
+
+joblib.dump(
+    imputer,
+    BASE_DIR / "decision_tree_imputer.pkl"
+)
+
+joblib.dump(
+    list(x.columns),
+    BASE_DIR / "decision_tree_columns.pkl"
+)

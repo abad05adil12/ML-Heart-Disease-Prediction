@@ -18,6 +18,8 @@ from sklearn.metrics import (
     PrecisionRecallDisplay,
 )
 
+from recommendations import generate_suggestions
+
 BASE_DIR = Path(__file__).resolve().parent
 RANDOM_STATE = 42
 
@@ -35,11 +37,10 @@ x = df.drop(
     errors="ignore"
 )
 
-y = df["cardio"]
+y = df["cardio"].astype(int)
 
 x = pd.get_dummies(x, drop_first=True, dtype=int)
 
-# 2. Train-test split: 70% / 30%, stratified to keep the class ratio
 x_train, x_test, y_train, y_test = train_test_split(
     x,
     y,
@@ -62,7 +63,6 @@ x_test = pd.DataFrame(
     index=x_test.index
 )
 
-# 4. Hyperparameter tuning with 3-fold cross-validation (8 candidates = 24 fits).
 param_grid = {
     "n_estimators": [100, 200],
     "max_depth": [6, 8, 10, 12],
@@ -71,9 +71,11 @@ param_grid = {
     "max_features": ["sqrt", "log2"],
 }
 
-# Parallelism is applied only at the search level (n_jobs=-1 below);
 search = RandomizedSearchCV(
-    RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=1),
+    RandomForestClassifier(
+        random_state=RANDOM_STATE,
+        n_jobs=1
+    ),
     param_distributions=param_grid,
     n_iter=8,
     cv=3,
@@ -84,56 +86,126 @@ search = RandomizedSearchCV(
 )
 
 search.fit(x_train, y_train)
+
 model = search.best_estimator_
-model.set_params(n_jobs=-1)  # use all cores for prediction
+model.set_params(n_jobs=-1)
 
 print("Best parameters:", search.best_params_)
-print("Best CV recall: {:.2f}%".format(search.best_score_ * 100))
+print("Best CV recall: {:.2f}%".format(
+    search.best_score_ * 100
+))
 
-# 5. Evaluate on the held-out test set
 y_pred = model.predict(x_test)
 y_prob = model.predict_proba(x_test)[:, 1]
 
-confusion = confusion_matrix(y_test, y_pred)
+confusion = confusion_matrix(
+    y_test,
+    y_pred,
+    labels=[0, 1]
+)
+
 tn, fp, fn, tp = confusion.ravel()
 
-print("Accuracy:  {:.2f}%".format(accuracy_score(y_test, y_pred) * 100))
-print("Precision: {:.2f}%".format(
-    precision_score(y_test, y_pred, zero_division=0) * 100))
-print("Recall:    {:.2f}%".format(
-    recall_score(y_test, y_pred, zero_division=0) * 100))
-print("Specificity: {:.2f}%".format(tn / (tn + fp) * 100))
-print("F1 Score:  {:.2f}%".format(
-    f1_score(y_test, y_pred, zero_division=0) * 100))
-print("ROC-AUC:   {:.4f}".format(roc_auc_score(y_test, y_prob)))
-print("PR-AUC:    {:.4f}".format(average_precision_score(y_test, y_prob)))
+print("Accuracy:  {:.2f}%".format(
+    accuracy_score(y_test, y_pred) * 100
+))
 
-# 6. Plots
+print("Precision: {:.2f}%".format(
+    precision_score(y_test, y_pred, zero_division=0) * 100
+))
+
+print("Recall:    {:.2f}%".format(
+    recall_score(y_test, y_pred, zero_division=0) * 100
+))
+
+print("Specificity: {:.2f}%".format(
+    tn / (tn + fp) * 100 if (tn + fp) > 0 else 0
+))
+
+print("F1 Score:  {:.2f}%".format(
+    f1_score(y_test, y_pred, zero_division=0) * 100
+))
+
+print("ROC-AUC:   {:.4f}".format(
+    roc_auc_score(y_test, y_prob)
+))
+
+print("PR-AUC:    {:.4f}".format(
+    average_precision_score(y_test, y_prob)
+))
+
 ConfusionMatrixDisplay(
     confusion_matrix=confusion,
     display_labels=["No Disease", "Disease"]
 ).plot()
+
 plt.title("Random Forest Confusion Matrix")
+plt.tight_layout()
 plt.show()
 
-RocCurveDisplay.from_predictions(y_test, y_prob, name="Random Forest")
+RocCurveDisplay.from_predictions(
+    y_test,
+    y_prob,
+    name="Random Forest"
+)
+
 plt.title("Random Forest ROC Curve")
+plt.tight_layout()
 plt.show()
 
-PrecisionRecallDisplay.from_predictions(y_test, y_prob, name="Random Forest")
+PrecisionRecallDisplay.from_predictions(
+    y_test,
+    y_prob,
+    name="Random Forest"
+)
+
 plt.title("Random Forest Precision-Recall Curve")
+plt.tight_layout()
 plt.show()
 
 importances = pd.Series(
-    model.feature_importances_, index=x.columns
+    model.feature_importances_,
+    index=x.columns
 ).sort_values()
 
 importances.tail(10).plot(kind="barh")
+
 plt.title("Random Forest - Top 10 Feature Importances")
 plt.xlabel("Importance")
 plt.tight_layout()
 plt.show()
 
-joblib.dump(model, BASE_DIR / "random_forest_model.pkl")
-joblib.dump(imputer, BASE_DIR / "random_forest_imputer.pkl")
-joblib.dump(list(x.columns), BASE_DIR / "random_forest_columns.pkl")
+prediction = model.predict(x_test.iloc[[0]])[0]
+
+patient = {
+    "ap_hi": 160,
+    "cholesterol": 3,
+    "gluc": 2,
+    "bmi": 31
+}
+
+result, suggestions = generate_suggestions(
+    patient,
+    prediction
+)
+print("Prediction:", result)
+
+print("\nPersonalized Suggestions:")
+
+for suggestion in suggestions:
+    print("-", suggestion)
+
+joblib.dump(
+    model,
+    BASE_DIR / "random_forest_model.pkl"
+)
+
+joblib.dump(
+    imputer,
+    BASE_DIR / "random_forest_imputer.pkl"
+)
+
+joblib.dump(
+    list(x.columns),
+    BASE_DIR / "random_forest_columns.pkl"
+)
